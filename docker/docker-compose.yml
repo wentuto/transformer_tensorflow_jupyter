@@ -1,0 +1,42 @@
+version: "3.8"
+services:
+    transformer:
+        image: transformer-tensorflow
+        init: true
+        build:
+            context: ./
+            dockerfile: Transformer.Dockerfile
+        deploy:
+            resources:
+                reservations:
+                    devices:
+                        - driver: nvidia
+                          device_ids: ['0']     
+                          capabilities: [compute,utility]
+        env_file: ./.env
+        network_mode: "host" 
+        ports:
+            - ${TF_JUPYTER_PORT}:${TF_JUPYTER_PORT}
+        user: $UID:$GID
+        stdin_open: true
+        volumes:
+             - /etc/group:/etc/group:ro
+             - /etc/passwd:/etc/passwd:ro
+             - /etc/shadow:/etc/shadow:ro
+             - ${ROOT_DIR}:/space
+             - $HOME:$HOME
+        tty: true
+        ipc: host
+        environment:
+            - TZ=Asia/Taipei
+        command:
+            [
+                "jupyter",
+                "notebook",
+                "--ip=*",
+                "--port=${TF_JUPYTER_PORT}",
+                "--allow-root",
+                '--notebook-dir=${JUPYTER_DIR}',
+                '--NotebookApp.token=${JUPYTER_TOKEN}'
+            ]
+
